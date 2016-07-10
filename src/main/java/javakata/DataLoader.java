@@ -23,28 +23,49 @@
 package javakata;
 
 import java.io.File;
+import java.util.*;
 
-final class Main {
-    private Main() {
+final class DataLoader {
+    private DataLoader() {
         // Prevent instantiation
     }
 
-    public static void main(final String[] args) {
-        if (args.length != 2) {
-            printUsage();
-            return;
+    public static OrgCollection load(final File orgFile, final File userFile) {
+        if (orgFile == null || !doesFileExist(orgFile)) {
+            throw new IllegalArgumentException(
+                "orgFile argument is null or the file does not exist");
         }
 
-        File orgFile = new File(args[0]);
-        File userFile = new File(args[1]);
+        if (userFile == null || !doesFileExist(userFile)) {
+            throw new IllegalArgumentException(
+                "userFile argument is null or the file does not exist");
+        }
 
-        OrgCollection orgCol = DataLoader.load(orgFile, userFile);
+        return null;
     }
 
-    private static void printUsage() {
-        System.out.println(
-            "You must provide two arguments: "
-            + "{path-to-org-file} {path-to-user-file}"
-        );
+    public static OrgCollection load(final Iterator<String> orgData,
+                                     final Iterator<String> userData) {
+        if (orgData == null) {
+            throw new IllegalArgumentException("orgData argument is null");
+        }
+
+        if (userData == null) {
+            throw new IllegalArgumentException("userData argument is null");
+        }
+
+        return null;
+    }
+
+    static boolean doesFileExist(final File file) {
+        if (!file.exists()) {
+            return false;
+        }
+
+        if (file.isDirectory()) {
+            return false;
+        }
+
+        return true;
     }
 }
