@@ -31,6 +31,7 @@ import static org.junit.Assert.*;
 import org.junit.*;
 import org.junit.rules.*;
 
+import java.util.regex.*;
 
 public final class DataLoaderTest {
     @Rule

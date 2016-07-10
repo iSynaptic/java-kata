@@ -25,7 +25,7 @@ package javakata;
 import java.util.*;
 
 final class OrgImpl implements Org {
-    private int id;
+    private final int id;
 
     private int users;
     private int files;

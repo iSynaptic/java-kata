@@ -105,6 +105,8 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Not all classes have direct test fixtures (eg. TextLineIterable). Utility code like this should generally be heavily tested. However, since this is an exercise and the utility code will be indirectly tested by its usage in other executable tests, direct test fixtures were not created.
 
+- Rather than using a String for the observation type in Result<T, TObservation> when loading the data files, a more structured type could be implemented.  This would allow calling code to distinguish from errors and warnings, or potentially other types of observations.  Given the requirements, this approach was not pursued, but represents a potential enhancement.
+
 
 ## Assumptions ##
 
@@ -116,13 +118,15 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - 3rd-party libraries cannot be used for implementation code. However, 3rd-party libraries & tools can be used build, testing, and packaging activities.
 
-- Data file records are newline separated and record fields are comma separated. Windows-style line endings should be permitted (carriage return + newline).
+- Data file records are newline separated and record fields are comma separated. Whitespace before and after field values can be truncated.  Windows-style line endings should be permitted (carriage return + newline).
 
 - All numbers represented in data files are presumed to be positive numbers, both identifiers and number of files/bytes. Identifiers are further assumed to be greater than or equal to one (1). Any lines containing numbers breaking this invariant will be ignored and an error will be written to `stderr`.
 
 - Organizations in input files will be provided in top-down fashion (ie. parent organizations occur before their children in the file).  If data files are provided that violate this expectation, the offending lines will ignored and logged to `stderr`.
 
-- Organization names are assumed to be no longer than 250 characters and will be truncated if found. A truncation warning will be written to `stderr`.
+- Organization names are assumed to contain only alphanumeric and space characters. If data files are provided that violate this expectation, the offending lines will ignored and logged to `stderr`.
+
+- Organization names are not queried or consumed in any of the requirements. During the loading phase, they will be validated, but not stored in the Org POJO.
 
 - Organization Hierarchy will not be so deep as to cause a stack overflow when using recursion to walk the structure. 
 
@@ -143,6 +147,8 @@ The output file is expected to be a plain text file. Each line should represent 
 - Outputting in "tree order" is assumed to be depth-first, pre-order. The reason for this assumption is it would yield text output that visually would look like the tree it is projected from.
 
 - Workload is expected to be evenly weighted between read and write operations; ie. data will be loaded into memory, processed, written to a file, and then unloaded (application will exit).
+
+- Data files will not contain large numbers of errors. If the were not the case, the Result<T, TObservation> class used when loading the data files could end up holding large numbers of errors in memory. To address this, rather than a pull-style API, a push-style API could be implemented to allow errors to be pushed to the caller (eg. callback) as they occurred rather than be collected in memory.
 
 - It is assumed that all data can fit within available memory.  
 

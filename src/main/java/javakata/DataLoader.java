@@ -24,13 +24,23 @@ package javakata;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.*;
 
 final class DataLoader {
+    static final Pattern ORG_LINE_PATTERN = Pattern.compile(
+        "^\\s*"
+      + "(?<orgId>\\d+)\\s*,\\s*"
+      + "(?<parentOrgId>(\\d+|null))\\s*,\\s*"
+      + "(?<name>[\\w ]*?)\\s*?(\\r?\\n|$)"
+    );
+
     private DataLoader() {
         // Prevent instantiation
     }
 
-    public static OrgCollection load(final File orgFile, final File userFile)
+    public static Result<OrgCollection, String> load(
+        final File orgFile,
+        final File userFile)
         throws FileNotFoundException {
 
         if (orgFile == null) {
@@ -45,8 +55,10 @@ final class DataLoader {
                     new TextLineIterable(userFile));
     }
 
-    public static OrgCollection load(final Iterable<String> orgData,
-                                     final Iterable<String> userData) {
+    public static Result<OrgCollection, String> load(
+        final Iterable<String> orgData,
+        final Iterable<String> userData) {
+
         if (orgData == null) {
             throw new IllegalArgumentException("orgData argument is null");
         }
@@ -55,7 +67,54 @@ final class DataLoader {
             throw new IllegalArgumentException("userData argument is null");
         }
 
-        return null;
+        List<String> observations = new LinkedList<String>();
+        OrgCollectionImpl orgs = new OrgCollectionImpl();
+
+        loadOrgData(orgData, orgs, observations);
+
+        return new Result<OrgCollection, String>(orgs, observations);
+    }
+
+    static void loadOrgData(final Iterable<String> orgData,
+                            final OrgCollectionImpl orgs,
+                            final List<String> observations) {
+        int lineNumber = 0;
+        for (String line : orgData) {
+            lineNumber++;
+
+            Matcher match = ORG_LINE_PATTERN.matcher(line);
+            if (!match.matches()) {
+                observations.add(String.format(
+                    "ERROR (line: %d) - "
+                  + "Organization record did not match expected format: '%s'",
+                  lineNumber,
+                  line
+                ));
+                continue;
+            }
+
+            int id = Integer.parseInt(match.group("orgId"));
+            String parentIdString = match.group("parentOrgId");
+
+            Integer parentId = !parentIdString.equals("null")
+                ? Integer.parseInt(parentIdString)
+                : null;
+
+            try {
+                OrgImpl org = new OrgImpl(id);
+                orgs.addOrg(parentId, org);
+            }
+            catch (Exception e) {
+                observations.add(String.format(
+                    "ERROR (line: %d) - "
+                  + "Organization record data could not be interpreted: '%s'\n"
+                  + "  Message: %s",
+                  lineNumber,
+                  line,
+                  e.getMessage()
+                ));
+            }
+        }
     }
 
     static boolean doesFileExist(final File file) {

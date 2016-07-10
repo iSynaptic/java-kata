@@ -25,6 +25,10 @@ package javakata;
 import java.util.*;
 
 final class OrgCollectionImpl implements OrgCollection {
+    public void addOrg(final Integer parentOrgId, final OrgImpl org) {
+
+    }
+
     public Org getOrg(final int orgId) {
         return null;
     }

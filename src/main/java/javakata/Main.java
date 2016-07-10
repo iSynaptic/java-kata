@@ -38,13 +38,18 @@ final class Main {
         File orgFile = new File(args[0]);
         File userFile = new File(args[1]);
 
-        OrgCollection orgCol = null;
+        Result<OrgCollection, String> result = null;
 
         try {
-            orgCol = DataLoader.load(orgFile, userFile);
+            result = DataLoader.load(orgFile, userFile);
+
+            for (String observation : result.getObservations()) {
+               System.err.println(observation);
+            }
         }
-        catch (FileNotFoundException e) {
-            System.err.println(e.getMessage());
+        catch (Exception e) {
+            System.err.println("Unexpected error in processing input data:");
+            e.printStackTrace(System.err);
             return;
         }
     }
