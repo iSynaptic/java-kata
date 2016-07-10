@@ -102,7 +102,7 @@ final class DataLoader {
 
             try {
                 OrgImpl org = new OrgImpl(id);
-                orgs.addOrg(parentId, org);
+                orgs.addOrg(org, parentId);
             }
             catch (Exception e) {
                 observations.add(String.format(

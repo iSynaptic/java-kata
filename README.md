@@ -15,6 +15,14 @@ The organizational hierarchy file will consist of text lines with the following 
 
     orgId, parentOrgId, name
 
+#####Example Input:#####
+
+	1, null, Foo
+	2, 1, Bar
+	4, 3, Baz
+	5, 2, Qux
+	3, null, Xyzzy
+
 Each line represents one organization in the organizational hierarchy.  The `orgId` field represents the unique identifier for each organization in the hierarchy.  The `parentOrgId` field contains the unique identifier of the parent organization in the hierarchy. If `parentOrgId` is null, the organization should be treated as a root organization.  The `name` field contains the name for the organization.
 
 ### Input File: User Data ###
@@ -22,6 +30,10 @@ Each line represents one organization in the organizational hierarchy.  The `org
 The user data file will consist of text lists with the following format:
 
     userId, orgId, numFiles, numBytes
+
+#####Example Input:#####
+
+	1, 1, 10, 200
 
 Each line represents one user with associated data.  The `userId` field represent the unique identifier for each user. The `orgId` represents the organization in the hierarchy that the user is a member of.  The `numFiles` and `numBytes` fields represent the number of files associated with the user and the number of bytes contained in those files, respectively.
 
@@ -86,6 +98,8 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - All processing warnings and errors will be written to `stderr` rather than `stdout`.  By default `stderr` is usually piped to a console for viewing during debugging & ad-hoc analysis sessions, but this will also allow warnings and errors to be monitored by other tools more robustly and not impact downstream processing of successfully computed statistics by other tools.
 
+- Implied in the *example* organization hierarchy input data file is the requirement to allow parent organizations to be referenced before they are defined (eg not in "tree order" [see assumptions]). However, this will require additional memory and processing time to resolve these once the entire data file has been loaded.  If possible, upstream systems should try to or be required to order input data in "tree order" so as to eliminate this additional processing overhead.
+
 - Parsing user data into POJOs is unnecessary since there are no requirements that require the user data to be maintained. However, the data should still be parsed into typed variables to support input validation and further processing by the Org POJO.
 
 	It could be argued that may be better to parse user data them into a POJO for consistency sake and to avoid committing the ["Data Clump" code smell](https://sourcemaking.com/refactoring/smells/data-clumps). However, this would create a potentially high number of POJO objects that would need to be collected by the garbage collector almost immediately after use.  Memory allocation and collection can often become a serious bottleneck in performant data processing.  Since the complexity cost of parsing into local stack variables is low and the "Data Clump" smell would be fairly localized, a User POJO will not be created.
@@ -105,16 +119,22 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Not all classes have direct test fixtures (eg. TextLineIterable). Utility code like this should generally be heavily tested. However, since this is an exercise and the utility code will be indirectly tested by its usage in other executable tests, direct test fixtures were not created.
 
+- Not all classes have rigorous input / output testing (eg. null/negative arguments into methods tested).  Some, but not all classes have these kinds of tests; since this is an exercise, these types of tests are implemented for demonstrative purposes.
+
 - Rather than using a String for the observation type in Result<T, TObservation> when loading the data files, a more structured type could be implemented.  This would allow calling code to distinguish from errors and warnings, or potentially other types of observations.  Given the requirements, this approach was not pursued, but represents a potential enhancement.
+
+- `IllegalArgumentException` is used heavily, whereas some custom exception types may be warranted (eg. `DuplicateDataException`, `InvalidDataException`, `CorruptDataException`, etc).
 
 
 ## Assumptions ##
 
 - A simple console application that takes command line arguments is sufficient to meet requirements.
 
-- As part of the exercise, "minor" stated technical requirements can be bent to demonstrate ability to consider possible alternatives and communicate potential problems with initial requirements. 
+- As part of the exercise, "minor" stated technical requirements can be bent to demonstrate ability to consider possible alternatives and communicate potential problems with initial requirements. Examples:
 
 	- Org API was changed in implementation to return a long from `getTotalNumBytes()` because of the increased likelihood of integer overflow given organizations containing users with large number of bytes stored in files.
+	
+	- OrgCollection API was changed to include a method `getRootOrgs` to return a list of all root organizations for reporting purposes.
 
 - 3rd-party libraries cannot be used for implementation code. However, 3rd-party libraries & tools can be used build, testing, and packaging activities.
 
@@ -122,13 +142,15 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - All numbers represented in data files are presumed to be positive numbers, both identifiers and number of files/bytes. Identifiers are further assumed to be greater than or equal to one (1). Any lines containing numbers breaking this invariant will be ignored and an error will be written to `stderr`.
 
-- Organizations in input files will be provided in top-down fashion (ie. parent organizations occur before their children in the file).  If data files are provided that violate this expectation, the offending lines will ignored and logged to `stderr`.
+- Organizations in input files are not guaranteed to be provided in top-down fashion (ie. parent organizations occur before their children in the file).  If organization records contain references to parent organizations that do not exist anywhere in the data file, those records will ignored and logged to `stderr`.
 
 - Organization names are assumed to contain only alphanumeric and space characters. If data files are provided that violate this expectation, the offending lines will ignored and logged to `stderr`.
 
 - Organization names are not queried or consumed in any of the requirements. During the loading phase, they will be validated, but not stored in the Org POJO.
 
 - Organization Hierarchy will not be so deep as to cause a stack overflow when using recursion to walk the structure. 
+
+- Organization data files contain unique identifier. However, if this is not the case, any records containing duplicate identifiers will be ignored and an error will be logged to `stderr`.
 
 - The total number of users or files in an organization hierarchy will not exceed the upper-bound of what a signed 32-bit integer can represent (ie. Java int).     
 

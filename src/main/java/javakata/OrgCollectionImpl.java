@@ -25,8 +25,53 @@ package javakata;
 import java.util.*;
 
 final class OrgCollectionImpl implements OrgCollection {
-    public void addOrg(final Integer parentOrgId, final OrgImpl org) {
+    private final HashMap<Integer, OrgImpl> orgs;
+    private final LinkedList<OrgImpl> rootOrgs;
 
+    public OrgCollectionImpl() {
+        this.orgs = new HashMap<Integer, OrgImpl>();
+        this.rootOrgs = new LinkedList<OrgImpl>();
+    }
+
+    public void addOrg(final OrgImpl org, final Integer parentOrgId) {
+        if (org == null) {
+            throw new IllegalArgumentException("org argument is null");
+        }
+
+        OrgImpl parentOrg = null;
+        if (parentOrgId != null) {
+            parentOrg = this.orgs.get(parentOrgId);
+
+            // TODO: add second pass logic
+            if (parentOrg == null) {
+                throw new IllegalArgumentException(
+                    "parentOrgId references an organization that does not exist"
+                );
+            }
+        }
+
+        // just put the org in the collection and optimize for
+        // the case when there is usually no existing org
+        OrgImpl old = this.orgs.put(org.getId(), org);
+        if (old != null) {
+            this.orgs.put(org.getId(), old);
+
+            throw new IllegalArgumentException(
+                "Duplicate organization detected. Id: "
+              + Integer.toString(org.getId())
+            );
+        }
+
+        if (parentOrg != null) {
+            parentOrg.addChildOrg(org);
+        }
+        else {
+            this.rootOrgs.add(org);
+        }
+    }
+
+    public Iterable<Org> getRootOrgs() {
+        return (Iterable) this.rootOrgs;
     }
 
     public Org getOrg(final int orgId) {

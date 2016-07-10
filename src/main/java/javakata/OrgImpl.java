@@ -26,6 +26,7 @@ import java.util.*;
 
 final class OrgImpl implements Org {
     private final int id;
+    private final LinkedList<OrgImpl> children;
 
     private int users;
     private int files;
@@ -39,6 +40,7 @@ final class OrgImpl implements Org {
         }
 
         this.id = id;
+        this.children = new LinkedList<OrgImpl>();
     }
 
     public void addUser(final int files, final long bytes) {
@@ -66,6 +68,14 @@ final class OrgImpl implements Org {
         this.bytes += bytes;
     }
 
+    public void addChildOrg(final OrgImpl child) {
+        if (child == null) {
+            throw new IllegalArgumentException("child argument is null");
+        }
+
+        this.children.add(child);
+    }
+
     public int getId() {
         return this.id;
     }
@@ -83,14 +93,32 @@ final class OrgImpl implements Org {
     }
 
     public int getTotalNumUsers() {
-        return this.getNumUsers();
+        int sum = this.getNumUsers();
+
+        for (OrgImpl child : this.children) {
+            sum += child.getTotalNumUsers();
+        }
+
+        return sum;
     }
 
     public int getTotalNumFiles() {
-        return this.getNumFiles();
+        int sum = this.getNumFiles();
+
+        for (OrgImpl child : this.children) {
+            sum += child.getTotalNumFiles();
+        }
+
+        return sum;
     }
 
     public long getTotalNumBytes() {
-        return this.getNumBytes();
+        long sum = this.getNumBytes();
+
+        for (OrgImpl child : this.children) {
+            sum += child.getTotalNumBytes();
+        }
+
+        return sum;
     }
 }
