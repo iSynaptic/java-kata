@@ -11,7 +11,7 @@ Create a tool, using Java, that reads two files into memory and produce summary 
 ### Functional Requirements ###
 
 #### Input File: Organizational Hierarchy ####
-The organizational hierarchy file will consist of text lines with the following format:
+The organizational hierarchy file will consist of records with the following format:
 
     orgId, parentOrgId, name
 
@@ -23,11 +23,11 @@ The organizational hierarchy file will consist of text lines with the following 
 	5, 2, Qux
 	3, null, Xyzzy
 
-Each line represents one organization in the organizational hierarchy.  The `orgId` field represents the unique identifier for each organization in the hierarchy.  The `parentOrgId` field contains the unique identifier of the parent organization in the hierarchy. If `parentOrgId` is null, the organization should be treated as a root organization.  The `name` field contains the name for the organization.
+Each record represents one organization in the organizational hierarchy.  The `orgId` field represents the unique identifier for each organization in the hierarchy.  The `parentOrgId` field contains the unique identifier of the parent organization in the hierarchy. If `parentOrgId` is null, the organization should be treated as a root organization.  The `name` field contains the name for the organization.
 
 ### Input File: User Data ###
 
-The user data file will consist of text lists with the following format:
+The user data file will consist of records with the following format:
 
     userId, orgId, numFiles, numBytes
 
@@ -35,11 +35,23 @@ The user data file will consist of text lists with the following format:
 
 	1, 1, 10, 200
 
-Each line represents one user with associated data.  The `userId` field represent the unique identifier for each user. The `orgId` represents the organization in the hierarchy that the user is a member of.  The `numFiles` and `numBytes` fields represent the number of files associated with the user and the number of bytes contained in those files, respectively.
+Each record represents one user with associated data.  The `userId` field represent the unique identifier for each user. The `orgId` represents the organization in the hierarchy that the user is a member of.  The `numFiles` and `numBytes` fields represent the number of files associated with the user and the number of bytes contained in those files, respectively.
 
 ### Output File: Report ###
 
-The output file is expected to be a plain text file. Each line should represent a single organization, including its unique identifier and summary statistics.  Each line should be indented to indicate its place in the hierarchy/tree structure.  The order of the lines should be in "tree order" (see assumptions).
+The output file is expected to be a plain text file. Each line should represent a single organization, including its unique identifier and summary statistics.  Each line should be indented to indicate its place in the hierarchy/tree structure.  The order of the lines should be in "tree order" (see Assumptions below).
+
+#####Output Format:#####
+
+    orgId, totalNumUsers, totalNumFiles, totalNumBytes
+
+#####Example Output (see Assumptions below)#####
+
+	- 1, 1, 10, 200
+      - 2, 0, 0, 0
+        - 5, 0, 0, 0
+    - 3, 0, 0, 0
+      - 4, 0, 0, 0       
 
 #### Internal API Contract ####
 
@@ -56,7 +68,7 @@ The output file is expected to be a plain text file. Each line should represent 
 
 ### Non-Functional Requirements ###
 
-- No dependencies other than the JVM
+- No dependencies other than the JVM (although a test framework such as JUnit or TestNG is permitted)
 - Source code must be available.
 - Must implement a few executable tests.
 - Must provide directions on:
@@ -72,50 +84,49 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - The console application will require two command line arguments containing the location of the data files.  Failure to provide these arguments will result in an error being written to `stderr`.  If either of the files specified in the arguments do not exist, an error will be written to `stderr`.
 
-- Organization Hierarchy data files will be parsed one line at a time into [POJOs](https://en.wikipedia.org/wiki/Plain_Old_Java_Object) before further processing to make sure the input data is valid.  Any lines that are not able to be parsed will be ignored and an error will be written to `stderr`.
+- Organization Hierarchy data files will be processed one record at a time into [POJOs](https://en.wikipedia.org/wiki/Plain_Old_Java_Object) before further processing to make sure the input data is valid.  Any lines that are not able to be parsed will be ignored and an error will be written to `stderr`.
 
 - The organizational hierarchy will be loaded one organization at a time, in the order provided by the file, into a simple Org POJO.
 
-	- The Org POJO will maintain a LinkedList of child organizations that can be added to as the file is being loaded, essentially forming a top-down K-ary tree structure. This will be useful for supporting query use cases such as summing the total number of users under an organization recursively by traversing the structure to compute totals.
+	- The POJO will maintain a LinkedList of child organizations that can be added to as the file is being loaded, essentially forming a top-down [K-ary tree](https://en.wikipedia.org/wiki/K-ary_tree) structure. This will be useful for supporting query use cases such as summing the total number of users under an organization recursively by traversing the structure to compute totals. Since all children (N) need to be visited to compute totals, ordering is unimportant because [addition (summation) is a commutative operation](https://en.wikipedia.org/wiki/Addition), and complete iteration of a [LinkedList is has O(N) time-complexity](https://en.wikipedia.org/wiki/Linked_list), this is a sufficient data structure.
 
-	- The POJO instance will be recorded into a HashMap by its unique identifier for quick retrieval by its identifier [[average time complexity of O(1) and worse-case space-complexity of O(n)](https://en.wikipedia.org/wiki/Hash_table)].
+	- The POJO instance will be recorded into a HashMap by its unique identifier for quick retrieval by its identifier [[average time complexity of O(1) and worst-case space-complexity of O(n)](https://en.wikipedia.org/wiki/Hash_table)].
 
-	- If the POJO contains a non-null `parentOrgId`, the HashMap will be used to lookup the parent organization and add the current organization to its list of children. If the parent organization cannot be found, the current organization will be discarded with the appropriate error messages.
+	- If the POJO contains a non-null `parentOrgId`, the HashMap will be used to lookup the parent organization and add the current organization to its list of children. If the parent organization cannot be found at the moment the record is being processed, it will be stored in a temporary [MultiMap](https://en.wikipedia.org/wiki/Multimap) (constructed using a HashMap and Collection) to be processed when the parent organization becomes available.
 
-	- If the POJO contains a null `parentOrgId`, the POJO will be recorded into a LinkedList. This will support iteration of all root organizations (and their children by recursive iteration) for summary statistics.
+	- If the POJO contains a null `parentOrgId`, the POJO will be recorded into a LinkedList. This will support iteration of all root organizations (and their children by recursive iteration) for global summary statistics.
 
-- The user data will be loaded one user at a time, in the order provided by the file, into a local stack variables and then pushed into the appropriate organization.
+- The user data will be loaded one record at a time, in the order provided by the file, into a local stack variables and then pushed into the appropriate organization.
 
-	- The POJO's `orgId` will be used to lookup the associated organization and roll-up the user's data to the Org POJO.
+	- The POJO's `orgId` will be used to lookup the associated organization and roll-up the user's data into the Org POJO.
 
 - Statistical output will by default be written to `stdout`. To meet the requirement of writing output to a file, the output can easily be piped to a file.  This also enables the tools output to be piped into other commands and is useful during debugging & ad-hoc analysis sessions. 
 
 ## Design Considerations / Implementation Rationale ##
 
-- Although a console application was selected, an web application or web API could have been implemented to expose the same functionality.  Given the requirements do not stipulate certain usage patterns, a console application was selected due to it being a simpler approach.  The code can and should be written to allow the primary processing logic to be lifted out of the console application and into a web-accessible code base with little effort.
+- Although a console application was selected, an web application or web API could have been implemented to expose the same functionality.  Given the requirements do not stipulate certain usage patterns, a console application was selected due to it being a simpler approach.  The code can and should be written to allow the primary processing logic to be lifted out of the console application and into a web-accessible code base with little effort by not tying the core processing and reporting to console specific APIs (eg. `println` calls against `stdout` and `stderr`, direct calls to local file system, etc).
 
-- APIs are generally more usable and maintainable when their inputs are as least restrictive as possible and return values are as specific (or derived) as feasible. An example in this exercise would be the OrgLoader component. Rather than taking file names or file streams as input arguments, an iterator of text lines is expected as input arguments.  Only the console application makes the input more restrictive to requiring file names.  This will make it simple to write unit tests without having to involve the file system and allow the logic to later be used where files are not the means of input without having to heavily modify the code.
+- APIs are generally more usable and maintainable when their inputs are as least restrictive as possible and return values are as specific (or derived) as feasible. An example in this exercise would be the `DataLoader` class. Rather than having `load` method overloads that exclusively take only file names or file streams as input arguments, the primary overload of the `load` method takes iterators of text lines as the expected input argument types.  Only the console application makes the input more restrictive to requiring file names.  This will make it simple to write unit tests without having to involve the file system and allow the logic to later be used where files are not the means of input without having to heavily modify the code.  Convenience, or helper, overloads that convert file-specific arguments into iterators can (and will) be provided. 
 
 - All processing warnings and errors will be written to `stderr` rather than `stdout`.  By default `stderr` is usually piped to a console for viewing during debugging & ad-hoc analysis sessions, but this will also allow warnings and errors to be monitored by other tools more robustly and not impact downstream processing of successfully computed statistics by other tools.
 
-- Implied in the *example* organization hierarchy input data file is the requirement to allow parent organizations to be referenced before they are defined (eg not in "tree order" [see assumptions]). However, this will require additional memory and processing time to resolve these once the entire data file has been loaded.  If possible, upstream systems should try to or be required to order input data in "tree order" so as to eliminate this additional processing overhead.
+- Implied in the *example* organization hierarchy input data file is the requirement to allow parent organizations to be referenced before they are defined (eg not in "tree order" [see Assumptions below]). However, this will require additional memory and processing time to resolve these references as the data file is being loaded.  If possible, upstream systems should try to or be required to order input data in "tree order" so as to eliminate this additional processing overhead.
 
 - Parsing user data into POJOs is unnecessary since there are no requirements that require the user data to be maintained. However, the data should still be parsed into typed variables to support input validation and further processing by the Org POJO.
 
-	It could be argued that may be better to parse user data them into a POJO for consistency sake and to avoid committing the ["Data Clump" code smell](https://sourcemaking.com/refactoring/smells/data-clumps). However, this would create a potentially high number of POJO objects that would need to be collected by the garbage collector almost immediately after use.  Memory allocation and collection can often become a serious bottleneck in performant data processing.  Since the complexity cost of parsing into local stack variables is low and the "Data Clump" smell would be fairly localized, a User POJO will not be created.
+	It could be argued that may be better to parse user data them into a POJO for consistency sake and to avoid committing the ["Data Clump" code smell](https://sourcemaking.com/refactoring/smells/data-clumps). However, this would create a potentially high number of POJO objects that would need to be collected by the garbage collector almost immediately after their construction.  Memory allocation and collection can often become a serious bottleneck to performing data processing as quickly and efficiently as possible.  Since the code complexity cost of parsing into local stack variables is low and the "Data Clump" smell would be fairly localized, a User POJO will not be created.
 
 - When adding users and child organizations to their parent organization, summary statistics could have been pre-calculated and stored in memory along side the other organization data.  This would increase overall space complexity and increase time complexity during the write operations, with the trade-off being that read operations time complexity would improve.   
 	
-	When designing information retreival systems, use cases need to be analyzed to see if they are write-heavy, read-heavy, or well balanced.  Many information retreival systems are read-heavy, so additional processing time can be spent during writes to pre-construct structures and pre-compute values that will make reads more performant.  This can be referred to as "workload tuning" and often involves space vs. time tradeoffs.
+	When designing information retreival systems, use cases need to be analyzed to see if they are write-heavy, read-heavy, or well balanced.  Many information retreival systems are read-heavy, so additional processing time can be spent during writes to pre-construct structures and pre-compute values that will make reads more performant in future workloads.  This can be referred to as "workload tuning" and often involves space & time complexity tradeoffs.
 
-- When recursively traversing the organizational hierarchy, if the hierarchy is deep enough it could cause a stack overflow.  An alternative to using traditional recursive methods is to use some form of iteration (eg. `while` or `for` loop) while maintaining some running state to build up results. This can enable to code to handle larger volumes of data, but can sometimes make the code lengthier, as well as more difficult to read, understand, debug, and modify.
+- When recursively traversing the organizational hierarchy, if the hierarchy is deep enough it could cause a [stack overflow](https://en.wikipedia.org/wiki/Stack_overflow), caused by a limited amount of address space [memory] available for the call stack.  An alternative to using traditional recursive methods is to use some form of iteration (eg. `while` or `for` loop) while maintaining an external stack and some running state to build up results. This can enable the code to handle larger volumes of data, but can sometimes make the code lengthier, as well as more difficult to read, understand, debug, and modify. This could also increase space-complexity since more memory could be consumed by maintaining an external stack.
 
 - Although the non-functional requirements specify that 3rd-party libraries are not permitted, the functional requirements lend itself to the usage of an embedded key-value database.  Examples include LevelDb, LMDB, and RocksDb.  Usage of an embedded key-value database would not excessively complicate the application since it would require no additional out-of-process services to be available.  
 
-	Additionally, it would permit much larger datasets to be handled with this tool, since the embedded databases handle the responsibility of swapping data pages between memory and disk and maintaining any retrieval structures (eg. trees). 
-	If it is expected that data files exceeding typically available memory would need to be processed by this tool, alternative data structures would preferred to quickly and efficiently page data back and forth between memory and disk while still allowing for efficient queries. Examples of data structures that would provide this capability: B-tree, B+tree, LSM tree, etc...
+	Additionally, it would permit much larger datasets to be handled by this tool, since the embedded databases handle the responsibility of swapping data pages between memory and disk and maintaining any retrieval structures (eg. trees, hashtables, bloom filters).  If it is expected that data files exceeding available memory would need to be processed by this tool, alternative data structures would preferred to quickly and efficiently page data back and forth between memory and disk while still allowing for efficient queries. Examples of data structures that would provide this capability: B-tree, B+tree, LSM tree, etc...
 
-- Immutable, persistent data structures could be used to allow online copy-on-write mutations and concurrent queries.  However, nothing in the requirements stipulates the need for online mutations. Given then requirements, the only way to mutate input data is to alter files and provide it to the tool for another full processing pass.  Additionally, since there aren't motivating requirements, such data structures would add unnecessary complexity to the code base.
+- Immutable, persistent data structures could be used to allow online copy-on-write mutations and concurrent queries.  However, nothing in the requirements stipulates the need for online mutations. Given the requirements, the only way to mutate input data is to alter files and provide it to the tool for another full processing pass.  Additionally, since there aren't motivating requirements, such data structures would add unnecessary code complexity to the code base.
 
 - Not all classes have direct test fixtures (eg. TextLineIterable). Utility code like this should generally be heavily tested. However, since this is an exercise and the utility code will be indirectly tested by its usage in other executable tests, direct test fixtures were not created.
 
@@ -132,15 +143,15 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - As part of the exercise, "minor" stated technical requirements can be bent to demonstrate ability to consider possible alternatives and communicate potential problems with initial requirements. Examples:
 
-	- Org API was changed in implementation to return a long from `getTotalNumBytes()` because of the increased likelihood of integer overflow given organizations containing users with large number of bytes stored in files.
+	- Org API was changed in implementation to return a `long` from `getTotalNumBytes()` because of the increased likelihood of integer overflow given organizations containing users with large number of bytes stored in files.
 	
 	- OrgCollection API was changed to include a method `getRootOrgs` to return a list of all root organizations for reporting purposes.
 
-- 3rd-party libraries cannot be used for implementation code. However, 3rd-party libraries & tools can be used build, testing, and packaging activities.
+- 3rd-party libraries cannot be used for implementation code. However, 3rd-party libraries & tools can be used build, testing, packaging, and deployment activities.
 
-- Data file records are newline separated and record fields are comma separated. Whitespace before and after field values can be truncated.  Windows-style line endings should be permitted (carriage return + newline).
+- Data file records are newline separated and record fields are comma separated. Whitespace before and after field values can be truncated.  Windows-style line endings should be permitted (carriage return + line feed).
 
-- All numbers represented in data files are presumed to be positive numbers, both identifiers and number of files/bytes. Identifiers are further assumed to be greater than or equal to one (1). Any lines containing numbers breaking this invariant will be ignored and an error will be written to `stderr`.
+- All numbers represented in data files are presumed to be non-negative numbers, including identifiers and number of files/bytes. Identifiers are further assumed to be greater than or equal to one (1). Any lines containing numbers breaking this invariant will be ignored and an error will be written to `stderr`.
 
 - Organizations in input files are not guaranteed to be provided in top-down fashion (ie. parent organizations occur before their children in the file).  If organization records contain references to parent organizations that do not exist anywhere in the data file, those records will ignored and logged to `stderr`.
 
@@ -150,27 +161,27 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Organization Hierarchy will not be so deep as to cause a stack overflow when using recursion to walk the structure. 
 
-- Organization data files contain unique identifier. However, if this is not the case, any records containing duplicate identifiers will be ignored and an error will be logged to `stderr`.
+- Organization data files contain unique identifiers. However, if this is not the case, any records containing duplicate identifiers will be ignored and an error will be logged to `stderr`.
 
-- The total number of users or files in an organization hierarchy will not exceed the upper-bound of what a signed 32-bit integer can represent (ie. Java int).     
+- The total number of users or files in an organization hierarchy will not exceed the upper-bound of what a signed 32-bit integer can represent (ie. `int` in Java code).     
 
 - User data will not reference organization identifiers that do not exist in the provided Organizational Hierarchy data. If this happens, the offending user line will be ignored and an error logged to `stderr`.
 
 - User data files contains *presumably* unique identifiers for users, although there are no requirements to "lookup" users by their identifier or report user level details.  The identifier will be parsed to ensure that it is numeric data, however, the uniqueness of the identifiers will not validated.
 
-- Users are permitted to have zero files with zero bytes, but cannot have zero files with non-zero bytes. Breaking this invariant will cause the user data to be ignored and an error being written to `stderr`.
+- Users are permitted to have zero files with zero bytes or a non-zero number of files with zero bytes, but cannot have zero files with a non-zero number of bytes. Breaking this invariant will cause the user data to be ignored and an error being written to `stderr`.
 
 - Multiple organizations in the hierarchy file can serve as root organizations (i.e. organizations that have no parent)
 
 - Output of stats can be written to the `stdout` and still meet requirements.  
 
-- Output indentation character(s) is not specified in requirements.  Two spaces for each indentation will be used.
+- Output indentation character(s) is not specified in requirements.  Two spaces followed by a dash and a space for each indentation will be used.  This is still easily machine readable, but also makes human consumption easier.
 
-- Outputting in "tree order" is assumed to be depth-first, pre-order. The reason for this assumption is it would yield text output that visually would look like the tree it is projected from.
+- Outputting in "tree order" is assumed to be [depth-first, pre-order](https://en.wikipedia.org/wiki/Tree_traversal). The reason for this assumption is it would yield text output that visually would look like the tree it is projected from and enable easy stack-oriented traversal by downstream machine processing.
 
-- Workload is expected to be evenly weighted between read and write operations; ie. data will be loaded into memory, processed, written to a file, and then unloaded (application will exit).
+- Workload is expected to be somewhat evenly weighted between read and write operations; ie. data will be loaded into memory, processed, written to a file, and then unloaded (application will exit).
 
-- Data files will not contain large numbers of errors. If the were not the case, the Result<T, TObservation> class used when loading the data files could end up holding large numbers of errors in memory. To address this, rather than a pull-style API, a push-style API could be implemented to allow errors to be pushed to the caller (eg. callback) as they occurred rather than be collected in memory.
+- Data files will not contain large numbers of errors. If that were not the case, the Result<T, TObservation> class used when loading the data files could end up holding large numbers of errors in memory. To address this, rather than a pull-style API, a push-style API could be implemented to allow errors to be pushed to the caller (eg. [callback](https://en.wikipedia.org/wiki/Callback_(computer_programming))) as they occurred rather than be collected in memory.
 
 - It is assumed that all data can fit within available memory.  
 
