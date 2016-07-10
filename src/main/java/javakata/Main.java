@@ -22,7 +22,7 @@
 
 package javakata;
 
-import java.io.File;
+import java.io.*;
 
 final class Main {
     private Main() {
@@ -38,7 +38,15 @@ final class Main {
         File orgFile = new File(args[0]);
         File userFile = new File(args[1]);
 
-        OrgCollection orgCol = DataLoader.load(orgFile, userFile);
+        OrgCollection orgCol = null;
+
+        try {
+            orgCol = DataLoader.load(orgFile, userFile);
+        }
+        catch (FileNotFoundException e) {
+            System.err.println(e.getMessage());
+            return;
+        }
     }
 
     private static void printUsage() {

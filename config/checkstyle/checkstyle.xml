@@ -31,6 +31,9 @@
 -->
 
 <module name="Checker">
+    <module name="SuppressionFilter">
+        <property name="file" value="${checkstyleConfigDir}/suppressions.xml"/>
+    </module>
     <!--
         If you set the basedir property below, then all reported file
         names will be relative to the specified directory. See
@@ -159,7 +162,6 @@
         <module name="FinalParameters"/>
         <module name="TodoComment"/>
         <module name="UpperEll"/>
-
     </module>
 
 </module>

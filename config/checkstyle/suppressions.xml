@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+
+<suppressions>
+    <!-- Suppressions for unit testing code  -->
+    <suppress 
+        checks="VisibilityModifier" 
+        files=".*[/\\]test[/\\]java[/\\]javakata[/\\]" 
+    />
+
+    <suppress 
+        checks="RequireThis" 
+        files=".*[/\\]test[/\\]java[/\\]javakata[/\\]" 
+    />
+</suppressions>

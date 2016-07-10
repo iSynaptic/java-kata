@@ -6,7 +6,7 @@ This repository contains an exercise in writing Java code to load and query the 
 
 ### High-Level ###
 
-Create a tool, using Java, that reads two files into memory and produce summary statistics. One file consists of an organizational hierarchy (ie. Directed Acrylic Graph with nodes limited to one parent, a.k.a. N-ary tree) and the other file consists of user data that will be associated to the organizational hierarchy.  
+Create a tool, using Java, that reads two files into memory and produce summary statistics. One file consists of an organizational hierarchy (ie. a [K-ary tree](https://en.wikipedia.org/wiki/K-ary_tree), or [Directed Acrylic Graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph) with in-bound edges limited to one) and the other file consists of user data that will be associated to the organizational hierarchy.  
 
 ### Functional Requirements ###
 
@@ -64,7 +64,7 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - The organizational hierarchy will be loaded one organization at a time, in the order provided by the file, into a simple Org POJO.
 
-	- The Org POJO will maintain a LinkedList of child organizations that can be added to as the file is being loaded, essentially forming a top-down N-ary tree structure. This will be useful for supporting query use cases such as summing the total number of users under an organization recursively by traversing the structure to compute totals.
+	- The Org POJO will maintain a LinkedList of child organizations that can be added to as the file is being loaded, essentially forming a top-down K-ary tree structure. This will be useful for supporting query use cases such as summing the total number of users under an organization recursively by traversing the structure to compute totals.
 
 	- The POJO instance will be recorded into a HashMap by its unique identifier for quick retrieval by its identifier [[average time complexity of O(1) and worse-case space-complexity of O(n)](https://en.wikipedia.org/wiki/Hash_table)].
 
@@ -78,7 +78,7 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Statistical output will by default be written to `stdout`. To meet the requirement of writing output to a file, the output can easily be piped to a file.  This also enables the tools output to be piped into other commands and is useful during debugging & ad-hoc analysis sessions. 
 
-## Design Considerations ##
+## Design Considerations / Implementation Rationale ##
 
 - Although a console application was selected, an web application or web API could have been implemented to expose the same functionality.  Given the requirements do not stipulate certain usage patterns, a console application was selected due to it being a simpler approach.  The code can and should be written to allow the primary processing logic to be lifted out of the console application and into a web-accessible code base with little effort.
 
@@ -101,32 +101,38 @@ The output file is expected to be a plain text file. Each line should represent 
 	Additionally, it would permit much larger datasets to be handled with this tool, since the embedded databases handle the responsibility of swapping data pages between memory and disk and maintaining any retrieval structures (eg. trees). 
 	If it is expected that data files exceeding typically available memory would need to be processed by this tool, alternative data structures would preferred to quickly and efficiently page data back and forth between memory and disk while still allowing for efficient queries. Examples of data structures that would provide this capability: B-tree, B+tree, LSM tree, etc...
 
-- Immutable, persistent data structures could be used to allow online copy-on-write mutations and concurrent queries.  However, nothing in the requirements stipulates the need for online mutations. Given then requirements, the only way to mutate input data is to alter files and provide it to the tool for another full processing pass.  Additionally, since there aren't motivating requirements, such data structures would add unnecessary complexity to the code base. 
+- Immutable, persistent data structures could be used to allow online copy-on-write mutations and concurrent queries.  However, nothing in the requirements stipulates the need for online mutations. Given then requirements, the only way to mutate input data is to alter files and provide it to the tool for another full processing pass.  Additionally, since there aren't motivating requirements, such data structures would add unnecessary complexity to the code base.
+
+- Not all classes have direct test fixtures (eg. TextLineIterable). Utility code like this should generally be heavily tested. However, since this is an exercise and the utility code will be indirectly tested by its usage in other executable tests, direct test fixtures were not created.
 
 
 ## Assumptions ##
 
 - A simple console application that takes command line arguments is sufficient to meet requirements.
 
-- As part of the exercise, minor stated technical requirements can be bent to demonstrate ability to consider possible alternatives and communicate potential problems with initial requirements. 
+- As part of the exercise, "minor" stated technical requirements can be bent to demonstrate ability to consider possible alternatives and communicate potential problems with initial requirements. 
 
-	- Org API was changed in implementation to return a long from `getTotalNumBytes()` because of the increased likelihood of overflow given organizations containing users with large number of bytes stored in files.
+	- Org API was changed in implementation to return a long from `getTotalNumBytes()` because of the increased likelihood of integer overflow given organizations containing users with large number of bytes stored in files.
 
 - 3rd-party libraries cannot be used for implementation code. However, 3rd-party libraries & tools can be used build, testing, and packaging activities.
 
 - Data file records are newline separated and record fields are comma separated. Windows-style line endings should be permitted (carriage return + newline).
 
-- All numbers represented in data files are presumed to be positive numbers, both identifiers and number of files/bytes. Any lines containing negative numbers will be ignored and an error will be written to `stderr`.
+- All numbers represented in data files are presumed to be positive numbers, both identifiers and number of files/bytes. Identifiers are further assumed to be greater than or equal to one (1). Any lines containing numbers breaking this invariant will be ignored and an error will be written to `stderr`.
 
 - Organizations in input files will be provided in top-down fashion (ie. parent organizations occur before their children in the file).  If data files are provided that violate this expectation, the offending lines will ignored and logged to `stderr`.
 
 - Organization names are assumed to be no longer than 250 characters and will be truncated if found. A truncation warning will be written to `stderr`.
 
-- Organization Hierarchy will not be so deep as to cause a stack overflow when using recursion to walk the structure.    
+- Organization Hierarchy will not be so deep as to cause a stack overflow when using recursion to walk the structure. 
+
+- The total number of users or files in an organization hierarchy will not exceed the upper-bound of what a signed 32-bit integer can represent (ie. Java int).     
 
 - User data will not reference organization identifiers that do not exist in the provided Organizational Hierarchy data. If this happens, the offending user line will be ignored and an error logged to `stderr`.
 
-- User data files contains *presumably* unique identifiers for users, although there are no requirements to "lookup" users by their identifier or report user level details.  The identifier will be parse to ensure that it is numeric data, however, the uniqueness of the identifiers will not validated.
+- User data files contains *presumably* unique identifiers for users, although there are no requirements to "lookup" users by their identifier or report user level details.  The identifier will be parsed to ensure that it is numeric data, however, the uniqueness of the identifiers will not validated.
+
+- Users are permitted to have zero files with zero bytes, but cannot have zero files with non-zero bytes. Breaking this invariant will cause the user data to be ignored and an error being written to `stderr`.
 
 - Multiple organizations in the hierarchy file can serve as root organizations (i.e. organizations that have no parent)
 

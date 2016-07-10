@@ -22,7 +22,7 @@
 
 package javakata;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 
 final class DataLoader {
@@ -30,22 +30,23 @@ final class DataLoader {
         // Prevent instantiation
     }
 
-    public static OrgCollection load(final File orgFile, final File userFile) {
-        if (orgFile == null || !doesFileExist(orgFile)) {
-            throw new IllegalArgumentException(
-                "orgFile argument is null or the file does not exist");
+    public static OrgCollection load(final File orgFile, final File userFile)
+        throws FileNotFoundException {
+
+        if (orgFile == null) {
+            throw new IllegalArgumentException("orgFile argument is null");
         }
 
-        if (userFile == null || !doesFileExist(userFile)) {
-            throw new IllegalArgumentException(
-                "userFile argument is null or the file does not exist");
+        if (userFile == null) {
+            throw new IllegalArgumentException("userFile argument is null");
         }
 
-        return null;
+        return load(new TextLineIterable(orgFile),
+                    new TextLineIterable(userFile));
     }
 
-    public static OrgCollection load(final Iterator<String> orgData,
-                                     final Iterator<String> userData) {
+    public static OrgCollection load(final Iterable<String> orgData,
+                                     final Iterable<String> userData) {
         if (orgData == null) {
             throw new IllegalArgumentException("orgData argument is null");
         }

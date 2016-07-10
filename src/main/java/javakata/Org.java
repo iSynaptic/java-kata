@@ -22,8 +22,8 @@
 
 package javakata;
 
-interface Org {
-    int getTotalNumUser();
+public interface Org {
+    int getTotalNumUsers();
     int getTotalNumFiles();
     long getTotalNumBytes();
 }

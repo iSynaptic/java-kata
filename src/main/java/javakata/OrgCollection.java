@@ -24,7 +24,7 @@ package javakata;
 
 import java.util.*;
 
-interface OrgCollection {
+public interface OrgCollection {
     Org getOrg(int orgId);
     List<Org> getOrgTree(int orgId, boolean inclusive);
 }

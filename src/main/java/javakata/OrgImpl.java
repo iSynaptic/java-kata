@@ -22,16 +22,75 @@
 
 package javakata;
 
+import java.util.*;
+
 final class OrgImpl implements Org {
-    public int getTotalNumUser() {
-        return 0;
+    private int id;
+
+    private int users;
+    private int files;
+    private long bytes;
+
+    public OrgImpl(final int id) {
+        if (id < 1) {
+            throw new IllegalArgumentException(
+                "Org identifiers must be greater than or equal to one."
+            );
+        }
+
+        this.id = id;
+    }
+
+    public void addUser(final int files, final long bytes) {
+        if (files < 0) {
+            throw new IllegalArgumentException(
+                "Users cannot have a negative number of files."
+            );
+        }
+
+        if (bytes < 0) {
+            throw new IllegalArgumentException(
+                "Users cannot have a negative number of bytes."
+            );
+        }
+
+        if (files == 0 && bytes > 0) {
+            throw new IllegalArgumentException(
+                "Users cannot have a non-zero number of bytes with zero files."
+            );
+        }
+
+        // zero-length files are permitted
+        this.users++;
+        this.files += files;
+        this.bytes += bytes;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public int getNumUsers() {
+        return this.users;
+    }
+
+    public int getNumFiles() {
+        return this.files;
+    }
+
+    public long getNumBytes() {
+        return this.bytes;
+    }
+
+    public int getTotalNumUsers() {
+        return this.getNumUsers();
     }
 
     public int getTotalNumFiles() {
-        return 0;
+        return this.getNumFiles();
     }
 
     public long getTotalNumBytes() {
-        return 0;
+        return this.getNumBytes();
     }
 }
