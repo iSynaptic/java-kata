@@ -82,10 +82,69 @@ public final class OrgImplTest {
         assertEquals(o.getNumBytes(), 0);
 
         o.addUser(3, 42);
-        o.addUser(9, 84);
+        o.addUser(9, 6 * 9);
 
         assertEquals(o.getNumUsers(), 2);
         assertEquals(o.getNumFiles(), 3 + 9);
-        assertEquals(o.getNumBytes(), 42 + 84);
+        assertEquals(o.getNumBytes(), 42 + (6 * 9));
+    }
+
+    @Test
+    public void recursiveComputationsAreCorrect() {
+        // This test is a bit large and convoluted,
+        // but since this is an exercise, I'll have
+        // a little fun with it.
+
+        OrgCollectionImpl col = new OrgCollectionImpl();
+
+        OrgImpl root = new OrgImpl(4);
+        OrgImpl org1 = new OrgImpl(8);
+        OrgImpl org1_1 = new OrgImpl(15);
+        OrgImpl org1_2 = new OrgImpl(16);
+        OrgImpl org2 = new OrgImpl(23);
+        OrgImpl org2_1 = new OrgImpl(42);
+        OrgImpl org2_2 = new OrgImpl(108);
+
+        col.addOrg(root, null);
+        col.addOrg(org1, 4);
+        col.addOrg(org1_1, 8);
+        col.addOrg(org1_2, 8);
+        col.addOrg(org2, 4);
+        col.addOrg(org2_1, 23);
+        col.addOrg(org2_2, 23);
+
+        // no user data added yet
+        assertEquals(root.getTotalNumUsers(), 0);
+        assertEquals(root.getTotalNumFiles(), 0);
+        assertEquals(root.getTotalNumBytes(), 0);
+
+        // add user to leaf org
+        org2_2.addUser(84, 75);
+
+        assertEquals(root.getTotalNumUsers(), 1);
+        assertEquals(root.getTotalNumFiles(), 84);
+        assertEquals(root.getTotalNumBytes(), 75);
+
+        assertEquals(org2.getTotalNumUsers(), 1);
+        assertEquals(org2.getTotalNumFiles(), 84);
+        assertEquals(org2.getTotalNumBytes(), 75);
+
+        // other branch org not affected
+        assertEquals(org1.getTotalNumUsers(), 0);
+        assertEquals(org1.getTotalNumFiles(), 0);
+        assertEquals(org1.getTotalNumBytes(), 0);
+
+        // add user to branch org
+        org1.addUser(4, 21);
+
+        // everthing roles up
+        assertEquals(root.getTotalNumUsers(), 2);
+        assertEquals(root.getTotalNumFiles(), 88);
+        assertEquals(root.getTotalNumBytes(), 96);
+
+        // other branch org not affected
+        assertEquals(org2.getTotalNumUsers(), 1);
+        assertEquals(org2.getTotalNumFiles(), 84);
+        assertEquals(org2.getTotalNumBytes(), 75);
     }
 }

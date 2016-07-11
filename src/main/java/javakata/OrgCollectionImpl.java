@@ -28,6 +28,8 @@ final class OrgCollectionImpl implements OrgCollection {
     private final HashMap<Integer, OrgImpl> orgs;
     private final LinkedList<OrgImpl> rootOrgs;
 
+    private Map<Integer, List<OrgImpl>> toResolve;
+
     public OrgCollectionImpl() {
         this.orgs = new HashMap<Integer, OrgImpl>();
         this.rootOrgs = new LinkedList<OrgImpl>();
@@ -38,23 +40,15 @@ final class OrgCollectionImpl implements OrgCollection {
             throw new IllegalArgumentException("org argument is null");
         }
 
-        OrgImpl parentOrg = null;
-        if (parentOrgId != null) {
-            parentOrg = this.orgs.get(parentOrgId);
-
-            // TODO: add second pass logic
-            if (parentOrg == null) {
-                throw new IllegalArgumentException(
-                    "parentOrgId references an organization that does not exist"
-                );
-            }
-        }
+        // Step 1: Verify org is not duplicate and ensure correct org exists
+        //         in the hashmap
 
         // just put the org in the collection and optimize for
         // the case when there is usually no existing org
-        OrgImpl old = this.orgs.put(org.getId(), org);
-        if (old != null) {
-            this.orgs.put(org.getId(), old);
+        OrgImpl orig = this.orgs.put(org.getId(), org);
+        if (orig != null && orig != org) {
+            // should be edge case, put original org back in hashmap
+            this.orgs.put(org.getId(), orig);
 
             throw new IllegalArgumentException(
                 "Duplicate organization detected. Id: "
@@ -62,12 +56,52 @@ final class OrgCollectionImpl implements OrgCollection {
             );
         }
 
+        // Step 2: Look up any children associated with org and
+        //         add the children to the org
+        List<OrgImpl> deferred = null;
+        if (this.toResolve != null) {
+            deferred = this.toResolve.get(org.getId());
+        }
+
+        if (deferred != null) {
+            for (OrgImpl child : deferred) {
+                org.addChildOrg(child);
+            }
+
+            this.toResolve.remove(org.getId());
+        }
+
+        // Step 3: Essure this org is associated with its parent or
+        //         register it for future resolution
+        OrgImpl parentOrg = null;
+        if (parentOrgId != null) {
+            parentOrg = this.orgs.get(parentOrgId);
+        }
+
         if (parentOrg != null) {
             parentOrg.addChildOrg(org);
+        }
+        else if (parentOrgId != null) {
+            this.addForResolution(org, parentOrgId);
         }
         else {
             this.rootOrgs.add(org);
         }
+    }
+
+    private void addForResolution(final OrgImpl org,
+                                  final Integer parentOrgId) {
+        if (this.toResolve == null) {
+            this.toResolve = new HashMap<Integer, List<OrgImpl>>();
+        }
+
+        List<OrgImpl> list = this.toResolve.get(parentOrgId);
+        if (list == null) {
+            list = new LinkedList<OrgImpl>();
+            this.toResolve.put(parentOrgId, list);
+        }
+
+        list.add(org);
     }
 
     public Iterable<Org> getRootOrgs() {
@@ -75,10 +109,31 @@ final class OrgCollectionImpl implements OrgCollection {
     }
 
     public Org getOrg(final int orgId) {
-        return null;
+        return this.orgs.get(orgId);
     }
 
     public List<Org> getOrgTree(final int orgId, final boolean inclusive) {
-        return null;
+        List<Org> list = new LinkedList<Org>();
+
+        OrgImpl org = this.orgs.get(orgId);
+        if (org == null) {
+            return list;
+        }
+
+        if (inclusive) {
+            list.add(org);
+        }
+
+        this.addChildren(org, list);
+        return list;
+    }
+
+    private void addChildren(final Org org, final List<Org> list) {
+        List<Org> children = org.getChildOrgs();
+
+        list.addAll(children);
+        for (Org child : children) {
+            this.addChildren(child, list);
+        }
     }
 }

@@ -22,8 +22,13 @@
 
 package javakata;
 
+import java.util.*;
+
 public interface Org {
+    int getId();
+
     int getTotalNumUsers();
     int getTotalNumFiles();
     long getTotalNumBytes();
+    List<Org> getChildOrgs();
 }

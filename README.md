@@ -120,7 +120,11 @@ The output file is expected to be a plain text file. Each line should represent 
 	
 	When designing information retreival systems, use cases need to be analyzed to see if they are write-heavy, read-heavy, or well balanced.  Many information retreival systems are read-heavy, so additional processing time can be spent during writes to pre-construct structures and pre-compute values that will make reads more performant in future workloads.  This can be referred to as "workload tuning" and often involves space & time complexity tradeoffs.
 
-- When recursively traversing the organizational hierarchy, if the hierarchy is deep enough it could cause a [stack overflow](https://en.wikipedia.org/wiki/Stack_overflow), caused by a limited amount of address space [memory] available for the call stack.  An alternative to using traditional recursive methods is to use some form of iteration (eg. `while` or `for` loop) while maintaining an external stack and some running state to build up results. This can enable the code to handle larger volumes of data, but can sometimes make the code lengthier, as well as more difficult to read, understand, debug, and modify. This could also increase space-complexity since more memory could be consumed by maintaining an external stack.
+- When recursively traversing the organizational hierarchy, if the hierarchy is deep enough it could cause a [stack overflow](https://en.wikipedia.org/wiki/Stack_overflow), caused by a limited amount of address space [memory] available for the call stack (see Asumptions below).  
+
+	An alternative to using traditional recursive methods is to use some form of iteration (eg. `while` or `for` loop) while maintaining an external stack and some running state to build up results. This can enable the code to handle larger volumes of data, but can sometimes make the code lengthier, as well as more difficult to read, understand, debug, and modify. This could also increase space-complexity since more memory could be consumed by maintaining an external stack.
+
+	Another alternative is to use a language that has a compiler with [tail recursion](https://en.wikipedia.org/wiki/Tail_call) optimization and write recursive methods that only use tail recursion. The compiler will emit code that is not succeptible to stack overflows if the source code only uses tail recursion.
 
 - Although the non-functional requirements specify that 3rd-party libraries are not permitted, the functional requirements lend itself to the usage of an embedded key-value database.  Examples include LevelDb, LMDB, and RocksDb.  Usage of an embedded key-value database would not excessively complicate the application since it would require no additional out-of-process services to be available.  
 
@@ -134,6 +138,8 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Rather than using a String for the observation type in Result<T, TObservation> when loading the data files, a more structured type could be implemented.  This would allow calling code to distinguish from errors and warnings, or potentially other types of observations.  Given the requirements, this approach was not pursued, but represents a potential enhancement.
 
+- I chose to use `LinkedList` over `ArrayList` or `Vector` because the use cases benefited more from the insertion time-complexity of O(1). The operation where `ArrayList`/`Vector` would beat `LinkedList`, random access by index at O(1) time complexity, was not needed to support the use cases in the requirements.  Additionally, `ArrayList` and `Vector` have a worst-case space complexity of O(2 * N), which is less ideal than `LinkedList`'s O(N) space complexity.
+
 - `IllegalArgumentException` is used heavily, whereas some custom exception types may be warranted (eg. `DuplicateDataException`, `InvalidDataException`, `CorruptDataException`, etc).
 
 
@@ -143,7 +149,9 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - As part of the exercise, "minor" stated technical requirements can be bent to demonstrate ability to consider possible alternatives and communicate potential problems with initial requirements. Examples:
 
-	- Org API was changed in implementation to return a `long` from `getTotalNumBytes()` because of the increased likelihood of integer overflow given organizations containing users with large number of bytes stored in files.
+	- Org API was changed to include an accessor `getId()` to return the organization's unique identifier.
+
+	- Org API was changed to return a `long` from `getTotalNumBytes()` because of the increased likelihood of integer overflow given organizations containing users with large number of bytes stored in files.
 	
 	- OrgCollection API was changed to include a method `getRootOrgs` to return a list of all root organizations for reporting purposes.
 

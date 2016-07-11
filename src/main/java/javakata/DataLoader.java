@@ -31,7 +31,7 @@ final class DataLoader {
         "^\\s*"
       + "(?<orgId>\\d+)\\s*,\\s*"
       + "(?<parentOrgId>(\\d+|null))\\s*,\\s*"
-      + "(?<name>[\\w ]*?)\\s*?(\\r?\\n|$)"
+      + "(?<name>[\\w ]*?)\\s*?\\r?(\\n|$)"
     );
 
     private DataLoader() {

@@ -15,4 +15,9 @@
         checks="RequireThis" 
         files=".*[/\\]test[/\\]java[/\\]javakata[/\\]" 
     />
+
+    <suppress 
+        checks="LocalVariableName" 
+        files=".*[/\\]test[/\\]java[/\\]javakata[/\\]" 
+    />
 </suppressions>

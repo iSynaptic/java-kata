@@ -23,6 +23,7 @@
 package javakata;
 
 import java.io.*;
+import java.util.*;
 
 final class Main {
     private Main() {
@@ -53,6 +54,8 @@ final class Main {
             System.exit(1);
             return;
         }
+
+        DataTextReporter.writeReport(result.getValue(), System.out);
     }
 
     private static void printUsage() {

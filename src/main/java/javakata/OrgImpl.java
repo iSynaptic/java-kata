@@ -92,6 +92,10 @@ final class OrgImpl implements Org {
         return this.bytes;
     }
 
+    public List<Org> getChildOrgs() {
+        return (List) this.children;
+    }
+
     public int getTotalNumUsers() {
         int sum = this.getNumUsers();
 
