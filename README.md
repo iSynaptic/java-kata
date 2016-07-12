@@ -236,3 +236,8 @@ At the root of the repository, type `vagrant up`. This will bring up the Vagrant
 	cd /vagrant
 	./run-example.sh
 	# javakata program will be compiled, tests run, and example input files processed
+
+## License ##
+
+Copyright © 2016, [Jordan Terrell](https://github.com/iSynaptic).
+Released under the [MIT license](https://github.com/iSynaptic/java-kata/blob/master/LICENSE).
