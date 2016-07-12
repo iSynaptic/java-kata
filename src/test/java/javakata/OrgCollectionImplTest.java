@@ -68,7 +68,7 @@ public final class OrgCollectionImplTest {
         assertEquals(col.getOrg(42), org);
 
         List<Org> rootOrgs = new LinkedList<Org>();
-        col.getOrgTree(42, true).forEach(rootOrgs::add);
+        col.getRootOrgs().forEach(rootOrgs::add);
 
         assertEquals(rootOrgs.size(), 1);
         assertEquals(rootOrgs.get(0), org);
@@ -78,7 +78,7 @@ public final class OrgCollectionImplTest {
         assertEquals(orgTree.get(0), org);
     }
 
-    /*@Test
+    @Test
     public void addMultipleOrgs() {
         OrgCollectionImpl col = new OrgCollectionImpl();
 
@@ -97,5 +97,40 @@ public final class OrgCollectionImplTest {
         col.addOrg(org2, 4);
         col.addOrg(org2_1, 23);
         col.addOrg(org2_2, 23);
-    }*/
+
+        // test getOrg
+        assertEquals(col.getOrg(16), org1_2);
+
+        // test getRootOrgs
+        List<Org> rootOrgs = new LinkedList<Org>();
+        col.getRootOrgs().forEach(rootOrgs::add);
+
+        assertEquals(rootOrgs.size(), 1);
+        assertEquals(rootOrgs.get(0), root);
+
+        //test getOrgTree on root
+        List<Org> orgTree = col.getOrgTree(4, true);
+        assertEquals(orgTree.size(), 7);
+
+
+        // inclusive:true works correctly
+        assertEquals(orgTree.get(0), root);
+
+        // assert "tree order"" in list
+        assertEquals(orgTree.get(1), org1);
+        assertEquals(orgTree.get(2), org1_1);
+        assertEquals(orgTree.get(3), org1_2);
+        assertEquals(orgTree.get(4), org2);
+        assertEquals(orgTree.get(5), org2_1);
+        assertEquals(orgTree.get(6), org2_2);
+
+        //test getOrgTree on branch
+        orgTree = col.getOrgTree(23, false);
+        assertEquals(orgTree.size(), 2);
+
+        // inclusive:false works correctly
+        assertEquals(orgTree.get(0), org2_1);
+        assertEquals(orgTree.get(1), org2_2);
+
+    }
 }

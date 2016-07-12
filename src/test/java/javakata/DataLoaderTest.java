@@ -24,14 +24,11 @@ package javakata;
 
 import java.util.*;
 import java.nio.file.*;
-import java.nio.charset.Charset;
 import java.io.*;
 
 import static org.junit.Assert.*;
 import org.junit.*;
 import org.junit.rules.*;
-
-import java.util.regex.*;
 
 public final class DataLoaderTest {
     @Rule
@@ -39,37 +36,20 @@ public final class DataLoaderTest {
 
     @Test
     public void loadWithNullOrgFileThrowsException() throws IOException {
-        Path emptyFilePath =
-            Paths.get("1a725b4c4929421b2063f1a0971ba30752ae46c9");
-
-        try {
-            List<String> lines = Arrays.asList("");
-            Files.write(emptyFilePath, lines, Charset.forName("UTF-8"));
-
             thrown.expect(IllegalArgumentException.class);
-
-            DataLoader.load(null, new File(emptyFilePath.toString()));
-        }
-        finally {
-            Files.delete(emptyFilePath);
-        }
+            DataLoader.load(
+                null,
+                new File("1a725b4c4929421b2063f1a0971ba30752ae46c9")
+            );
     }
 
     @Test
     public void loadWithNullUserFileThrowsException() throws IOException {
-        Path emptyFilePath =
-            Paths.get("1a725b4c4929421b2063f1a0971ba30752ae46c9");
-
-        try {
-            List<String> lines = Arrays.asList("");
-            Files.write(emptyFilePath, lines, Charset.forName("UTF-8"));
-
             thrown.expect(IllegalArgumentException.class);
-            DataLoader.load(new File(emptyFilePath.toString()), null);
-        }
-        finally {
-            Files.delete(emptyFilePath);
-        }
+            DataLoader.load(
+                new File("1a725b4c4929421b2063f1a0971ba30752ae46c9"),
+                null
+            );
     }
 
     @Test
@@ -86,5 +66,54 @@ public final class DataLoaderTest {
 
         thrown.expect(IllegalArgumentException.class);
         DataLoader.load(lines, null);
+    }
+
+    @Test
+    public void loadEmptyData() {
+        List<String> orgData = Arrays.asList();
+        List<String> userData = Arrays.asList();
+
+        Result<OrgCollection, String> result =
+            DataLoader.load(orgData, userData);
+
+        assertNotNull(result);
+
+        OrgCollection col = result.getValue();
+        List<Org> rootOrgs = new LinkedList<Org>();
+        col.getRootOrgs().forEach(rootOrgs::add);
+
+        assertEquals(rootOrgs.size(), 0);
+    }
+
+    @Test
+    public void loadExampleData() {
+        List<String> orgData = Arrays.asList(
+            "1, null, Foo",
+            "2, 1, Bar",
+            "4, 3, Baz",
+            "5, 2, Qux",
+            "3, null, Xyzzy"
+        );
+
+        List<String> userData = Arrays.asList(
+            "1, 1, 10, 200"
+        );
+
+        Result<OrgCollection, String> result =
+            DataLoader.load(orgData, userData);
+
+        assertNotNull(result);
+
+        OrgCollection col = result.getValue();
+        List<Org> rootOrgs = new LinkedList<Org>();
+        col.getRootOrgs().forEach(rootOrgs::add);
+
+        assertEquals(rootOrgs.size(), 2);
+
+        Org o = col.getOrg(1);
+        assertNotNull(o);
+        assertEquals(o.getTotalNumUsers(), 1);
+        assertEquals(o.getTotalNumFiles(), 10);
+        assertEquals(o.getTotalNumBytes(), 200);
     }
 }

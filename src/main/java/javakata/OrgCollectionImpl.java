@@ -131,8 +131,8 @@ final class OrgCollectionImpl implements OrgCollection {
     private void addChildren(final Org org, final List<Org> list) {
         List<Org> children = org.getChildOrgs();
 
-        list.addAll(children);
         for (Org child : children) {
+            list.add(child);
             this.addChildren(child, list);
         }
     }
