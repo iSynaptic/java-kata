@@ -212,7 +212,7 @@ The output file is expected to be a plain text file. Each line should represent 
 
 ## Build / Usage ##
 
-In order to build and run this project you need to have the following prerequisites installed (tested on `Ubuntu x64 14.04` patched as of `2016-07-07`):
+In order to build and run this project you need to have the following prerequisites installed and accessible via the PATH environment variable (tested on `Ubuntu x64 14.04` patched as of `2016-07-07`):
 
 - Java 8 OpenJDK (tested with version `1.8.0_91`)
 - Gradle 2.13
