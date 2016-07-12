@@ -2,6 +2,20 @@
 
 This repository contains an exercise in writing Java code to load and query the contents of two data files into in-memory data structures and efficiently query the data. It also contains an exercise in documenting the requirements, approach, design considerations, and assumptions.
 
+- [Stated Requirements](#stated-requirements)
+  * [High-Level](#high-level)
+  * [Functional Requirements](#functional-requirements)
+    + [Input File: Organizational Hierarchy](#input-file-organizational-hierarchy)
+  * [Input File: User Data](#input-file-user-data)
+  * [Output File: Report](#output-file-report)
+    + [Internal API Contract](#internal-api-contract)
+  * [Non-Functional Requirements](#non-functional-requirements)
+- [Solution Approach](#solution-approach)
+- [Design Considerations / Implementation Rationale](#design-considerations--implementation-rationale)
+- [Assumptions](#assumptions)
+- [Build / Usage](#build--usage)
+  * [Vagrant Machine](#vagrant-machine)
+
 ## Stated Requirements ##
 
 ### High-Level ###
