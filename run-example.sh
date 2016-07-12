@@ -2,5 +2,5 @@
 
 set -e
 
-gradle build
-java -jar build/libs/app.jar example-org-file example-user-file
+./build.sh
+build/javakata.run testfiles/example-org-file testfiles/example-user-file
