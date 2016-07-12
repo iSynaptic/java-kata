@@ -132,18 +132,20 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Immutable, persistent data structures could be used to allow online copy-on-write mutations and concurrent queries.  However, nothing in the requirements stipulates the need for online mutations. Given the requirements, the only way to mutate input data is to alter files and provide it to the tool for another full processing pass.  Additionally, since there aren't motivating requirements, such data structures would add unnecessary code complexity to the code base.
 
-- Not all classes have direct test fixtures (eg. TextLineIterable). Utility code like this should generally be heavily tested. However, since this is an exercise and the utility code will be indirectly tested by its usage in other executable tests, direct test fixtures were not created.
+- Not all classes have direct test fixtures (eg. `TextLineIterable`). Utility code like this should generally be heavily tested. However, since this is an exercise and the utility code will be indirectly tested by its usage in other executable tests, direct test fixtures were not created.
 
 - Not all classes have rigorous input / output testing (eg. null/negative arguments into methods tested).  Some, but not all classes have these kinds of tests; since this is an exercise, these types of tests are implemented for demonstrative purposes.
 
-- Rather than using a String for the observation type in Result<T, TObservation> when loading the data files, a more structured type could be implemented.  This would allow calling code to distinguish from errors and warnings, or potentially other types of observations.  Given the requirements, this approach was not pursued, but represents a potential enhancement.
+- Rather than using a String for the observation type in `Result<T, TObservation>` when loading the data files, a more structured type could be implemented.  This would allow calling code to distinguish from errors and warnings, or potentially other types of observations.  Given the requirements, this approach was not pursued, but represents a potential enhancement.
 
-- I chose to use `LinkedList` over `ArrayList` or `Vector` because the use cases benefited more from the insertion time-complexity of O(1). The operation where `ArrayList`/`Vector` would beat `LinkedList`, random access by index at O(1) time complexity, was not needed to support the use cases in the requirements.  Additionally, `ArrayList` and `Vector` have a worst-case space complexity of O(2 * N), which is less ideal than `LinkedList`'s O(N) space complexity.
+- `LinkedList` was chose over `ArrayList` or `Vector` because the use cases benefited more from the insertion time-complexity of O(1). The operation where `ArrayList`/`Vector` would beat `LinkedList`, random access by index at O(1) time complexity, was not needed to support the use cases in the requirements.  Additionally, `ArrayList` and `Vector` have a worst-case space complexity of O(2 * N), which is less ideal than `LinkedList`'s O(N) space complexity.
 
 - `IllegalArgumentException` is used heavily, whereas some custom exception types may be warranted (eg. `DuplicateDataException`, `InvalidDataException`, `CorruptDataException`, etc).
 
 
 ## Assumptions ##
+
+- Source code can be made available by publishing a GitHub repository and sharing it's location.
 
 - A simple console application that takes command line arguments is sufficient to meet requirements.
 

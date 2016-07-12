@@ -48,6 +48,17 @@ final class Main {
                System.err.println(observation);
             }
         }
+        catch (FileNotFoundException e) {
+            String[] lines = e.getMessage()
+                .split(System.getProperty("line.separator"));
+
+            System.err.println(
+                "Could not find one of the data files: "
+              + lines[0]
+            );
+            System.exit(1);
+            return;
+        }
         catch (Exception e) {
             System.err.println("Unexpected error in processing input data:");
             e.printStackTrace(System.err);
