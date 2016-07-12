@@ -196,8 +196,43 @@ The output file is expected to be a plain text file. Each line should represent 
 - It is assumed that all data can fit within available memory.  
 
 
-## Environment Setup ##
+## Build / Usage ##
 
-## Testing ##
+In order to build and run this project you need to have the following prerequisites installed (tested on `Ubuntu x64 14.04` patched as of `2016-07-07`):
 
-## Usage ##
+- Java 8 OpenJDK (tested with version `1.8.0_91`)
+- Gradle 2.13
+
+Clone this repository into a directory on your local machine. Navigate into the new project directory and run the `run-example.sh` script found at the root of the repository.  This should compile, test, and run the `javakata` program with the example input mentioned in the requirements section.  You should see output similar (if not identical) to the example output mentioned in the requirements section.
+
+You can also run the `build.sh` script directly (it is called by the `run-example.sh` script) found at the root to build and test the `javakata` program without running the example input files through the program.
+
+Both scripts will create an executable at the `build/javakata.run` path.  You can run this directly by providing two arguments indicating the location of the org & user data files. For example, running from the repository root, the following command with execute the program with the provided example input:
+
+	build/javakata.run testfiles/example-org-file testfiles/example-user-file
+
+If you would like to save all output to a file:
+
+	build/javakata.run testfiles/example-org-file testfiles/example-user-file > output.txt 2>&1
+
+If you would like to save all output to files, separating normal and error output to separate files:
+
+	build/javakata.run testfiles/example-org-file testfiles/example-user-file 2>> error.txt 1>> output.txt
+
+These commands can be used as templates to process different files, eg. there are larger test files in the `testfiles` directory.
+
+### Vagrant Machine ###
+
+A [Vagrant](https://www.vagrantup.com/) machine has been included in the repository with an environment containing the prerequisites already installed.  To make use of the Vagrant machine, make sure the following prerequisites are installed:
+
+- Vagrant 1.8.4
+- Virtual Box 5.0.24
+
+At the root of the repository, type `vagrant up`. This will bring up the Vagrant machine. NOTE: This may take a few minutes, especially the first time.  Once the command completes, type `vagrant ssh`. This will connect your terminal to the running Vagrant machine.  Navigate to the `/vagrant` directory and now you will be in the root of the project repository.  Use the instructions above to build, test, and run the `javakata` program.  Any changes made to the source code (on the host machine or in the Vagrant machine) can be re-compiled and run from the VM.
+
+	vagrant up
+	# wait a few minutes
+	vagrant ssh
+	cd /vagrant
+	./run-example.sh
+	# javakata program will be compiled, tests run, and example input files processed
