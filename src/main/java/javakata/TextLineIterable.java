@@ -94,7 +94,7 @@ final class TextLineIterable implements Iterable<String> {
                     temp.close();
                 }
                 catch (IOException e) {
-                    // we tried / perhaps some logging is needed here
+                    // we tried, perhaps some logging is needed here
                     return;
                 }
             }

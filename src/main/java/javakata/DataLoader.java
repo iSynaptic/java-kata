@@ -34,6 +34,14 @@ final class DataLoader {
       + "(?<name>[\\w ]*?)\\s*?\\r?(\\n|$)"
     );
 
+    static final Pattern USER_LINE_PATTERN = Pattern.compile(
+        "^\\s*"
+      + "(?<userId>\\d+)\\s*,\\s*"
+      + "(?<orgId>(\\d+|null))\\s*,\\s*"
+      + "(?<files>(\\d+|null))\\s*,\\s*"
+      + "(?<bytes>(\\d+|null))\\s*?\\r?(\\n|$)"
+    );
+
     private DataLoader() {
         // Prevent instantiation
     }
@@ -71,6 +79,7 @@ final class DataLoader {
         OrgCollectionImpl orgs = new OrgCollectionImpl();
 
         loadOrgData(orgData, orgs, observations);
+        loadUserData(userData, orgs, observations);
 
         return new Result<OrgCollection, String>(orgs, observations);
     }
@@ -103,6 +112,55 @@ final class DataLoader {
             try {
                 OrgImpl org = new OrgImpl(id);
                 orgs.addOrg(org, parentId);
+            }
+            catch (Exception e) {
+                observations.add(String.format(
+                    "ERROR (line: %d) - "
+                  + "Organization record data could not be interpreted: '%s'\n"
+                  + "  Message: %s",
+                  lineNumber,
+                  line,
+                  e.getMessage()
+                ));
+            }
+        }
+    }
+
+    static void loadUserData(final Iterable<String> userData,
+                             final OrgCollectionImpl orgs,
+                             final List<String> observations) {
+        int lineNumber = 0;
+        for (String line : userData) {
+            lineNumber++;
+
+            Matcher match = USER_LINE_PATTERN.matcher(line);
+            if (!match.matches()) {
+                observations.add(String.format(
+                    "ERROR (line: %d) - "
+                  + "User record did not match expected format: '%s'",
+                  lineNumber,
+                  line
+                ));
+                continue;
+            }
+
+            int orgId = Integer.parseInt(match.group("orgId"));
+            int files = Integer.parseInt(match.group("files"));
+            int bytes = Integer.parseInt(match.group("bytes"));
+
+            try {
+                OrgImpl org = orgs.getOrg(orgId);
+                if (org == null) {
+                    observations.add(String.format(
+                          "ERROR (line: %d) - "
+                        + "User record references unknown organization: '%s'\n",
+                        lineNumber,
+                        line
+                    ));
+                    continue;
+                }
+
+                org.addUser(files, bytes);
             }
             catch (Exception e) {
                 observations.add(String.format(

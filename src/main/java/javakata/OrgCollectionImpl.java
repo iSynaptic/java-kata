@@ -108,7 +108,7 @@ final class OrgCollectionImpl implements OrgCollection {
         return (Iterable) this.rootOrgs;
     }
 
-    public Org getOrg(final int orgId) {
+    public OrgImpl getOrg(final int orgId) {
         return this.orgs.get(orgId);
     }
 

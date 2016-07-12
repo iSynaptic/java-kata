@@ -78,7 +78,7 @@ public final class OrgCollectionImplTest {
         assertEquals(orgTree.get(0), org);
     }
 
-    @Test
+    /*@Test
     public void addMultipleOrgs() {
         OrgCollectionImpl col = new OrgCollectionImpl();
 
@@ -97,5 +97,5 @@ public final class OrgCollectionImplTest {
         col.addOrg(org2, 4);
         col.addOrg(org2_1, 23);
         col.addOrg(org2_2, 23);
-    }
+    }*/
 }

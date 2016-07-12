@@ -51,6 +51,7 @@ final class Main {
         catch (Exception e) {
             System.err.println("Unexpected error in processing input data:");
             e.printStackTrace(System.err);
+            
             System.exit(1);
             return;
         }
