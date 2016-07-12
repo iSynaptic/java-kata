@@ -227,6 +227,7 @@ A [Vagrant](https://www.vagrantup.com/) machine has been included in the reposit
 
 - Vagrant 1.8.4
 - Virtual Box 5.0.24
+	- NOTE: Virtual Box is known to have difficulties running at the same time Hyper-V is installed (on Windows) or when Parallels is running on OS X.
 
 At the root of the repository, type `vagrant up`. This will bring up the Vagrant machine. NOTE: This may take a few minutes, especially the first time.  Once the command completes, type `vagrant ssh`. This will connect your terminal to the running Vagrant machine.  Navigate to the `/vagrant` directory and now you will be in the root of the project repository.  Use the instructions above to build, test, and run the `javakata` program.  Any changes made to the source code (on the host machine or in the Vagrant machine) can be re-compiled and run from the VM.
 
