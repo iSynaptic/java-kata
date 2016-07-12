@@ -6,8 +6,8 @@ This repository contains an exercise in writing Java code to load and query the 
   * [High-Level](#high-level)
   * [Functional Requirements](#functional-requirements)
     + [Input File: Organizational Hierarchy](#input-file-organizational-hierarchy)
-  * [Input File: User Data](#input-file-user-data)
-  * [Output File: Report](#output-file-report)
+    + [Input File: User Data](#input-file-user-data)
+    + [Output File: Report](#output-file-report)
     + [Internal API Contract](#internal-api-contract)
   * [Non-Functional Requirements](#non-functional-requirements)
 - [Solution Approach](#solution-approach)
@@ -39,7 +39,7 @@ The organizational hierarchy file will consist of records with the following for
 
 Each record represents one organization in the organizational hierarchy.  The `orgId` field represents the unique identifier for each organization in the hierarchy.  The `parentOrgId` field contains the unique identifier of the parent organization in the hierarchy. If `parentOrgId` is null, the organization should be treated as a root organization.  The `name` field contains the name for the organization.
 
-### Input File: User Data ###
+#### Input File: User Data ####
 
 The user data file will consist of records with the following format:
 
@@ -51,7 +51,7 @@ The user data file will consist of records with the following format:
 
 Each record represents one user with associated data.  The `userId` field represent the unique identifier for each user. The `orgId` represents the organization in the hierarchy that the user is a member of.  The `numFiles` and `numBytes` fields represent the number of files associated with the user and the number of bytes contained in those files, respectively.
 
-### Output File: Report ###
+#### Output File: Report ####
 
 The output file is expected to be a plain text file. Each line should represent a single organization, including its unique identifier and summary statistics.  Each line should be indented to indicate its place in the hierarchy/tree structure.  The order of the lines should be in "tree order" (see Assumptions below).
 
@@ -120,7 +120,7 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Although a console application was selected, an web application or web API could have been implemented to expose the same functionality.  Given the requirements do not stipulate certain usage patterns, a console application was selected due to it being a simpler approach.  The code can and should be written to allow the primary processing logic to be lifted out of the console application and into a web-accessible code base with little effort by not tying the core processing and reporting to console specific APIs (eg. `println` calls against `stdout` and `stderr`, direct calls to local file system, etc).
 
-- APIs are generally more usable and maintainable when their inputs are as least restrictive as possible and return values are as specific (or derived) as feasible. An example in this exercise would be the `DataLoader` class. Rather than having `load` method overloads that exclusively take only file names or file streams as input arguments, the primary overload of the `load` method takes iterators of text lines as the expected input argument types.  Only the console application makes the input more restrictive to requiring file names.  This will make it simple to write unit tests without having to involve the file system and allow the logic to later be used where files are not the means of input without having to heavily modify the code.  Convenience, or helper, overloads that convert file-specific arguments into iterators can (and will) be provided. 
+- APIs are generally more usable and maintainable when their inputs are as least restrictive as possible and return values are as specific (or derived) as feasible. An example in this exercise would be the `DataLoader` class. Rather than having `load` method overloads that exclusively take only file names or file streams as input arguments, the primary overload of the `load` method takes iterators of text lines as the expected input argument types.  Only the console application makes the input more restrictive to requiring file names.  This will make it simple to write unit tests without having to involve the file system and allow the logic to later be used where files are not the means of input without having to heavily modify the code.  Convenience, or helper, overloads that convert file-specific arguments into iterators can (and have) be provided. 
 
 - All processing warnings and errors will be written to `stderr` rather than `stdout`.  By default `stderr` is usually piped to a console for viewing during debugging & ad-hoc analysis sessions, but this will also allow warnings and errors to be monitored by other tools more robustly and not impact downstream processing of successfully computed statistics by other tools.
 
@@ -128,7 +128,7 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Parsing user data into POJOs is unnecessary since there are no requirements that require the user data to be maintained. However, the data should still be parsed into typed variables to support input validation and further processing by the Org POJO.
 
-	It could be argued that may be better to parse user data them into a POJO for consistency sake and to avoid committing the ["Data Clump" code smell](https://sourcemaking.com/refactoring/smells/data-clumps). However, this would create a potentially high number of POJO objects that would need to be collected by the garbage collector almost immediately after their construction.  Memory allocation and collection can often become a serious bottleneck to performing data processing as quickly and efficiently as possible.  Since the code complexity cost of parsing into local stack variables is low and the "Data Clump" smell would be fairly localized, a User POJO will not be created.
+	It could be argued that it may be better to parse user data them into a POJO for consistency sake and to avoid committing the ["Data Clump" code smell](https://sourcemaking.com/refactoring/smells/data-clumps). However, this would create a potentially high number of POJO objects that would need to be collected by the garbage collector almost immediately after their construction.  Memory allocation and collection can often become a serious bottleneck to performing data processing as quickly and efficiently as possible.  Since the code complexity cost of parsing into local stack variables is low and the "Data Clump" smell would be fairly localized, a User POJO will not be created.
 
 - When adding users and child organizations to their parent organization, summary statistics could have been pre-calculated and stored in memory along side the other organization data.  This would increase overall space complexity and increase time complexity during the write operations, with the trade-off being that read operations time complexity would improve.   
 	
@@ -150,7 +150,7 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Not all classes have rigorous input / output testing (eg. null/negative arguments into methods tested).  Some, but not all classes have these kinds of tests; since this is an exercise, these types of tests are implemented for demonstrative purposes.
 
-- Rather than using a String for the observation type in `Result<T, TObservation>` when loading the data files, a more structured type could be implemented.  This would allow calling code to distinguish from errors and warnings, or potentially other types of observations.  Given the requirements, this approach was not pursued, but represents a potential enhancement.
+- Rather than using a `String` for the observation type in `Result<T, TObservation>` when loading the data files, a more structured type could be implemented.  This would allow calling code to distinguish from errors and warnings, or potentially other types of observations.  Given the requirements, this approach was not pursued, but represents a potential enhancement.
 
 - `LinkedList` was chose over `ArrayList` or `Vector` because the use cases benefited more from the insertion time-complexity of O(1). The operation where `ArrayList`/`Vector` would beat `LinkedList`, random access by index at O(1) time complexity, was not needed to support the use cases in the requirements.  Additionally, `ArrayList` and `Vector` have a worst-case space complexity of O(2 * N), which is less ideal than `LinkedList`'s O(N) space complexity.
 
@@ -177,13 +177,13 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - All numbers represented in data files are presumed to be non-negative numbers, including identifiers and number of files/bytes. Identifiers are further assumed to be greater than or equal to one (1). Any lines containing numbers breaking this invariant will be ignored and an error will be written to `stderr`.
 
-- Organizations in input files are not guaranteed to be provided in top-down fashion (ie. parent organizations occur before their children in the file).  If organization records contain references to parent organizations that do not exist anywhere in the data file, those records will ignored and logged to `stderr`.
+- Organizations in input files are not guaranteed to be provided in top-down fashion (ie. parent organizations occur before their children in the file).  If organization records contain references to parent organizations that do not exist anywhere in the data file, those records will not show up in the summary statistics report, but will be accessible for `OrgCollection` lookup methods.
 
 - Organization names are assumed to contain only alphanumeric and space characters. If data files are provided that violate this expectation, the offending lines will ignored and logged to `stderr`.
 
 - Organization names are not queried or consumed in any of the requirements. During the loading phase, they will be validated, but not stored in the Org POJO.
 
-- Organization Hierarchy will not be so deep as to cause a stack overflow when using recursion to walk the structure. 
+- Organization Hierarchy files will not be so deep as to cause a stack overflow when using recursion to walk the structure. 
 
 - Organization data files contain unique identifiers. However, if this is not the case, any records containing duplicate identifiers will be ignored and an error will be logged to `stderr`.
 
@@ -197,7 +197,7 @@ The output file is expected to be a plain text file. Each line should represent 
 
 - Multiple organizations in the hierarchy file can serve as root organizations (i.e. organizations that have no parent)
 
-- Output of stats can be written to the `stdout` and still meet requirements.  
+- Output of stats can be written to the `stdout` and still meet requirements, since `stdout` output can be piped to a file.  
 
 - Output indentation character(s) is not specified in requirements.  Two spaces followed by a dash and a space for each indentation will be used.  This is still easily machine readable, but also makes human consumption easier.
 
