@@ -165,7 +165,7 @@ final class DataLoader {
             catch (Exception e) {
                 observations.add(String.format(
                     "ERROR (line: %d) - "
-                  + "Organization record data could not be interpreted: '%s'\n"
+                  + "User record data could not be interpreted: '%s'\n"
                   + "  Message: %s",
                   lineNumber,
                   line,
