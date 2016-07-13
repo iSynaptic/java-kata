@@ -174,16 +174,4 @@ final class DataLoader {
             }
         }
     }
-
-    static boolean doesFileExist(final File file) {
-        if (!file.exists()) {
-            return false;
-        }
-
-        if (file.isDirectory()) {
-            return false;
-        }
-
-        return true;
-    }
 }
